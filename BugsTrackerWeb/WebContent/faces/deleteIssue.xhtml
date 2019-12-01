@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+	  xmlns:pe="http://primefaces.org/ui/extensions"
+	  xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:h1="http://java.sun.com/jsf/html">
+
+<h:head>
+	<link href="#{application.contextPath}/css/common.css" rel="stylesheet" type="text/css" />
+	<link href="#{application.contextPath}/css/bootstrap.css" rel="stylesheet" type="text/css" />
+	<title>#{msgs['edit.issue.title']}</title>
+</h:head>
+<body id="leftTextBody">
+	<h:panelGroup layout="block">
+		<h:graphicImage value="/img/bugs.gif" alt="#{msgs['button.edit']}" width="242" height="102"/>
+	</h:panelGroup>
+	<h:panelGroup layout="block" class="rightOutput">
+		<h:outputText value="Logged in as:  #{LOGGED_USER.username} (#{LOGGED_USER.fullname})"/>
+	</h:panelGroup>
+    
+	<h:form>
+	    <p:toolbar>
+	    	 <f:facet name="left">
+	            <p:commandButton action="#{getIssuesBean.listMyIssues()}" styleClass="btn btn-primary" value="#{msgs['label.issue.viewMyView']}" icon="ui-icon-folder-open" rendered="#{renderedUtils.guestRender()}"/>
+	            <p:commandButton action="#{getIssuesBean.listAllIssues()}" styleClass="btn btn-primary" value="#{msgs['label.issue.viewAllIssues']}" icon="ui-icon-folder-open" rendered="#{renderedUtils.guestRender()}"/>
+	            <p:commandButton action="#{getIssuesBean.createAction()}" styleClass="btn btn-primary" value="#{msgs['label.issue.reportIssue']}" icon="ui-icon-document" rendered="#{renderedUtils.guestRender()}"/>  
+	            <p:commandButton action="#{getIssuesBean.managePanel()}" styleClass="btn btn-primary" value="#{msgs['label.issue.manage']}" icon="ui-icon-wrench" rendered="#{renderedUtils.guestRender()}"/> 
+	            <f:facet name="right">
+	            	<p:commandButton ajax="false" styleClass="btn btn-primary" action="#{loginBean.logout}" value="#{msgs['button.logout']}" icon="ui-icon-extlink"/>
+				</f:facet>
+	   		</f:facet>
+	    </p:toolbar>
+	</h:form>
+	   
+    <br></br>	
+	
+	<h:form>
+		<h:panelGrid styleClass="leftOutput" columns="2" cellpadding="5">
+		
+			<p:outputLabel for="project" value="#{msgs['label.issue.project']}" styleClass="leftOutputLable" />
+			<h:panelGrid styleClass="ui-outputtext">
+				<h:outputText id="project" value="#{deleteIssueBean.issue.project.name}"></h:outputText>
+		    </h:panelGrid>
+		    
+		    <h:outputLabel value="#{msgs['label.issue.id']}" for="id" styleClass="leftOutputLable" />
+		    <h:panelGrid styleClass="ui-outputtext">
+				<h:outputText id="id" value="#{deleteIssueBean.issue.id}"></h:outputText>
+			</h:panelGrid>
+			
+			<h:outputLabel value="#{msgs['label.issue.title']}" for="issueTitle" styleClass="leftOutputLable" />
+			<h:panelGrid styleClass="ui-outputtext borderSeparate">
+				<h:outputText id="issueTitle" name="issueTitle" value="#{deleteIssueBean.issue.title}"></h:outputText>
+			</h:panelGrid>
+
+			<h:outputLabel value="#{msgs['label.issue.description']}" for="description" styleClass="leftOutputLable"/>
+			<h:panelGrid styleClass="ui-outputtext borderSeparate">
+				<h:outputText id="description" value="#{deleteIssueBean.issue.description}"></h:outputText>
+			</h:panelGrid>
+			
+			<p:outputLabel for="status" value="#{msgs['label.issue.status']}"  styleClass="leftOutputLable"/>
+			<h:panelGrid styleClass="ui-outputtext">
+				<h:outputText id="status" value="#{deleteIssueBean.issue.getIssueStatus().description}">
+				</h:outputText>
+			</h:panelGrid>
+					
+			<p:outputLabel for="assignto" value="#{msgs['label.issue.assignto']}" styleClass="leftOutputLable" />
+			<h:panelGrid styleClass="ui-outputtext">
+				<h:outputText id="assignto" value="#{deleteIssueBean.issue.getAssignto().fullname}">
+			</h:outputText>
+			</h:panelGrid>
+					
+		</h:panelGrid>
+  		<br/>
+		<h:panelGroup layout="block" class="center">
+		    <p:commandButton ajax="false" id="deleteIssueBtn"
+				styleClass="btn btn-primary"
+				value="#{msgs['button.delete']}"
+				action="#{deleteIssueBean.deleteAction()}" icon="ui-icon-trash">
+				<f:param name="id" value="#{deleteIssueBean.issue.id}"/>
+			</p:commandButton>
+		</h:panelGroup>
+	  
+	</h:form>	
+</body> 
+</html>

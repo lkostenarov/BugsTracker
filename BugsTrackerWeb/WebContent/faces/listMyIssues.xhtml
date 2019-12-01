@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+	  xmlns:pe="http://primefaces.org/ui/extensions"
+	  xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:h1="http://java.sun.com/jsf/html">
+
+<h:head>
+	<link href="#{application.contextPath}/css/common.css" rel="stylesheet" type="text/css" />
+	<link href="#{application.contextPath}/css/bootstrap.css" rel="stylesheet" type="text/css" />
+	<title> #{msgs['default.title']} </title>
+</h:head>
+
+<body id="commonBody">
+	<h:panelGroup layout="block">
+		<h:graphicImage value="/img/bugs.gif" alt="#{msgs['button.edit']}" width="242" height="102"/>
+	</h:panelGroup>
+	<h:panelGroup layout="block" class="rightOutput">
+		<h:outputText value="Logged in as:  #{LOGGED_USER.username} (#{LOGGED_USER.fullname})"/>
+	</h:panelGroup>
+	<h:form>
+	    <p:toolbar>
+	    	 <f:facet name="left">
+	            <p:commandButton action="#{getIssuesBean.listMyIssues()}" styleClass="btn btn-primary" value="#{msgs['label.issue.viewMyView']}" icon="ui-icon-folder-open" rendered="#{renderedUtils.guestRender()}"/>
+	            <p:commandButton action="#{getIssuesBean.listAllIssues()}" styleClass="btn btn-primary" value="#{msgs['label.issue.viewAllIssues']}" icon="ui-icon-folder-open" rendered="#{renderedUtils.guestRender()}"/>
+	            <p:commandButton action="#{getIssuesBean.createAction()}" styleClass="btn btn-primary" value="#{msgs['label.issue.reportIssue']}" icon="ui-icon-document" rendered="#{renderedUtils.guestRender()}"/>  
+	            <p:commandButton action="#{getIssuesBean.managePanel()}" styleClass="btn btn-primary" value="#{msgs['label.issue.manage']}" icon="ui-icon-wrench" rendered="#{renderedUtils.guestRender()}"/> 
+	            <f:facet name="right">
+	            	<p:commandButton ajax="false" styleClass="btn btn-primary" action="#{loginBean.logout}" value="#{msgs['button.logout']}" icon="ui-icon-extlink"/>
+				</f:facet>
+	   		</f:facet>
+	    </p:toolbar>
+	</h:form>
+	
+	<h:form>
+		<p:fieldset legend="#{msgs['label.issue.Reported_by_me']}" toggleable="true" class="toggleUsers" toggleSpeed="500">			
+			<h:panelGroup layout="block">
+				<p:dataTable var="issue" value="#{getIssuesBean.getReportedIssuesByMe()}"
+					rows="10" 
+					widgetVar="issueTable" 
+					paginator="true"
+					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					paginatorPosition="bottom" 
+					rowsPerPageTemplate="5,10,15"
+					
+					id="listIssuesReportedByMe"
+					sortMode="multiple"
+	              	table-layout= "fixed"
+	              	rowStyleClass="#{issue.getIssueStatus().id eq '1' ? 'newStatusStyle' : (issue.getIssueStatus().id eq '2' ? 'openStatusStyle' : (issue.getIssueStatus().id eq '3' ? 'fixedStatusStyle' : 'closeStatusStyle')) }">
+	              									
+					<p:column headerText="#{msgs['issue.id']}" sortBy="#{issue.id}"
+						style="width:15px;" styleClass="ui-state-th">
+						<p:commandLink actionListener="#{getIssuesBean.viewAction()}" ajax="false"
+									   action="#{getIssuesBean.viewAction()}" class="ui-underline">
+							<f:param name="id" value="#{issue.id}" />
+	        				<h:outputText value="#{issue.id}" class="ui-underline"/>
+	    				</p:commandLink>					
+					</p:column>
+					
+					<p:column id="title" headerText="#{msgs['issue.title']}" sortBy="#{issue.title}" 
+						style="	width:250px; word-wrap:break-word;" styleClass="td-left" 
+						filterBy="#{issue.title}" filterMatchMode="contains" >
+						<h:outputText value="#{issue.title}" />
+					</p:column>
+					
+					<p:column headerText="#{msgs['issue.status']}"
+						style="width:35px;" sortBy="#{issue.getIssueStatus().description}" >
+						<h:outputText value="#{issue.getIssueStatus().description}"/>
+						<p><h:outputText value="(#{issue.getAssignto().username})"/></p>
+					</p:column>
+					
+					<p:column headerText="#{msgs['issue.reporter']}"
+						style="width:50px;" sortBy="#{issue.reporter.username}" >
+						<h:outputText value="#{issue.reporter.username}"/>
+						<p>
+							<h:outputText value="#{issue.create_dt}">
+							<f:convertDateTime pattern="yyyy.MM.dd HH:MM:SS"/> 
+							</h:outputText>
+						</p>
+	
+					</p:column>
+					
+					<p:column sortBy="#{issue.project.name}" headerText="#{msgs['issue.project']}" 
+								style="width:100px;"  styleClass="td-left">
+			            <f:facet name="filter">
+			                <p:selectOneMenu onchange="PF('issueTable').filter()" >
+			                    <f:selectItem itemLabel="#{msgs['issue.all_project']}" itemValue="#{null}" noSelectionOption="true" />
+			                     <f:selectItems value="#{selectProjectBean.findAllProjects()}"  var="Project"
+			                    itemLabel="#{Project.name}" itemValue="#{Project.id}"/>
+			                </p:selectOneMenu>
+			            </f:facet>
+			            <h:outputText value="#{issue.project.name}" />
+			        </p:column>
+					
+					<p:column exportable="false"
+						style="width:35px;">
+						<f:facet name="header">
+							<h:outputText value="#{msgs['columns_actions']}" />
+						</f:facet>
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.editAction()}" id="editButton">
+							<f:param name="id" value="#{issue.id}" />
+							<h:graphicImage value="/img/edit-icon-new.png"
+								title="#{msgs['button.edit']}" alt="#{msgs['button.edit']}"
+								width="20" height="20" />
+						</p:commandLink>
+						
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.viewAction()}" id="viewButton">
+							<f:param name="id" value="#{issue.id}"/>
+							<h:graphicImage value="/img/preview-ico-new.png"
+								title="#{msgs['button.preview']}" alt="#{msgs['button.preview']}"
+								width="20" height="20" />
+						</p:commandLink>	
+						
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.deleteAction()}" id="deleteButton">
+							<f:param name="id" value="#{issue.id}"/>
+							<h:graphicImage value="/img/delete.png"
+								title="#{msgs['button.delete']}" alt="#{msgs['button.delete']}"
+								width="20" height="20" />
+						</p:commandLink>				
+					</p:column>
+				</p:dataTable>	
+				
+				<h:commandLink id="excel">
+					<h:graphicImage value="/img/excel.png" />
+					<p:dataExporter type="xls" target="listIssuesReportedByMe" fileName="issues" />
+				</h:commandLink>
+	
+				<h:commandLink id="pdf">
+					<p:graphicImage value="/img/pdf.png" />
+					<p:dataExporter type="pdf" target="listIssuesReportedByMe" fileName="issues" />
+				</h:commandLink>
+				
+			</h:panelGroup>
+		</p:fieldset>
+	</h:form>
+	
+	<h:form>
+		<p:fieldset legend="#{msgs['label.issue.Assigned_to_me']}" toggleable="true" class="toggleUsers" toggleSpeed="500">			
+			<h:panelGroup layout="block">
+				<p:dataTable var="aIssue" value="#{getIssuesBean.getAssignedIssuesToMe()}"
+					rows="10" 
+					widgetVar="aIssueTable" 
+					paginator="true"
+					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					paginatorPosition="bottom" 
+					rowsPerPageTemplate="5,10,15"
+					
+					id="listaIssuesAssignedToMe"
+					sortMode="multiple"
+	              	table-layout= "fixed"
+	              	rowStyleClass="#{aIssue.getIssueStatus().id eq '1' ? 'newStatusStyle' : (aIssue.getIssueStatus().id eq '2' ? 'openStatusStyle' : (aIssue.getIssueStatus().id eq '3' ? 'fixedStatusStyle' : 'closeStatusStyle')) }">
+	              									
+					<p:column headerText="#{msgs['issue.id']}" sortBy="#{aIssue.id}"
+						style="width:15px;" styleClass="ui-state-th">
+						<p:commandLink actionListener="#{getaIssuesBean.viewAction()}" ajax="false"
+									   action="#{getaIssuesBean.viewAction()}" class="ui-underline">
+							<f:param name="id" value="#{aIssue.id}" />
+	        				<h:outputText value="#{aIssue.id}" class="ui-underline"/>
+	    				</p:commandLink>					
+					</p:column>
+					
+					<p:column id="title" headerText="#{msgs['issue.title']}" sortBy="#{aIssue.title}" 
+						style="	width:250px; word-wrap:break-word;" styleClass="td-left" 
+						filterBy="#{aIssue.title}" filterMatchMode="contains" >
+						<h:outputText value="#{aIssue.title}" />
+					</p:column>
+					
+					<p:column headerText="#{msgs['issue.status']}"
+						style="width:35px;" sortBy="#{aIssue.getIssueStatus().description}" >
+						<h:outputText value="#{aIssue.getIssueStatus().description}"/>
+						<p><h:outputText value="(#{aIssue.getAssignto().username})"/></p>
+					</p:column>
+					
+					<p:column headerText="#{msgs['issue.reporter']}"
+						style="width:50px;" sortBy="#{aIssue.reporter.username}" >
+						<h:outputText value="#{aIssue.reporter.username}"/>
+						<p>
+							<h:outputText value="#{aIssue.create_dt}">
+							<f:convertDateTime pattern="yyyy.MM.dd HH:MM:SS"/> 
+							</h:outputText>
+						</p>
+	
+					</p:column>
+					
+					<p:column sortBy="#{issue.project.name}" headerText="#{msgs['issue.project']}" 
+								style="width:100px;"  styleClass="td-left">
+			            <f:facet name="filter">
+			                <p:selectOneMenu onchange="PF('aIssueTable').filter()" >
+			                    <f:selectItem itemLabel="#{msgs['issue.all_project']}" itemValue="#{null}" noSelectionOption="true" />
+			                     <f:selectItems value="#{selectProjectBean.findAllProjects()}"  var="Project"
+			                    itemLabel="#{Project.name}" itemValue="#{Project.id}"/>
+			                </p:selectOneMenu>
+			            </f:facet>
+			            <h:outputText value="#{aIssue.project.name}" />
+			        </p:column>
+					
+					<p:column exportable="false"
+						style="width:35px;">
+						<f:facet name="header">
+							<h:outputText value="#{msgs['columns_actions']}" />
+						</f:facet>
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.editAction()}" id="editButton">
+							<f:param name="id" value="#{aIssue.id}" />
+							<h:graphicImage value="/img/edit-icon-new.png"
+								title="#{msgs['button.edit']}" alt="#{msgs['button.edit']}"
+								width="20" height="20" />
+						</p:commandLink>
+						
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.viewAction()}" id="viewButton">
+							<f:param name="id" value="#{aIssue.id}"/>
+							<h:graphicImage value="/img/preview-ico-new.png"
+								title="#{msgs['button.preview']}" alt="#{msgs['button.preview']}"
+								width="20" height="20" />
+						</p:commandLink>	
+						
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.deleteAction()}" id="deleteButton">
+							<f:param name="id" value="#{aIssue.id}"/>
+							<h:graphicImage value="/img/delete.png"
+								title="#{msgs['button.delete']}" alt="#{msgs['button.delete']}"
+								width="20" height="20" />
+						</p:commandLink>				
+					</p:column>
+				</p:dataTable>	
+				
+				<h:commandLink id="excel">
+					<h:graphicImage value="/img/excel.png" />
+					<p:dataExporter type="xls" target="listaIssuesAssignedToMe" fileName="aIssues" />
+				</h:commandLink>
+	
+				<h:commandLink id="pdf">
+					<p:graphicImage value="/img/pdf.png" />
+					<p:dataExporter type="pdf" target="listaIssuesAssignedToMe" fileName="aIssues" />
+				</h:commandLink>
+				
+			</h:panelGroup>
+		</p:fieldset>
+	</h:form>
+	
+	<h:form>
+		<p:fieldset legend="#{msgs['label.issue.unassigned']}" toggleable="true" class="toggleUsers" toggleSpeed="500">			
+			<h:panelGroup layout="block">
+				<p:dataTable var="uIssue" value="#{getIssuesBean.getUnassignedIssues()}"
+					rows="10" 
+					widgetVar="uIssueTable" 
+					paginator="true"
+					paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					paginatorPosition="bottom" 
+					rowsPerPageTemplate="5,10,15"
+					
+					id="listuIssuesUnassigned"
+					sortMode="multiple"
+	              	table-layout= "fixed"
+	              	rowStyleClass="#{uIssue.getIssueStatus().id eq '1' ? 'newStatusStyle' : (uIssue.getIssueStatus().id eq '2' ? 'openStatusStyle' : (uIssue.getIssueStatus().id eq '3' ? 'fixedStatusStyle' : 'closeStatusStyle')) }">
+	              									
+					<p:column headerText="#{msgs['issue.id']}" sortBy="#{uIssue.id}"
+						style="width:15px;" styleClass="ui-state-th">
+						<p:commandLink actionListener="#{getuIssuesBean.viewAction()}" ajax="false"
+									   action="#{getuIssuesBean.viewAction()}" class="ui-underline">
+							<f:param name="id" value="#{uIssue.id}" />
+	        				<h:outputText value="#{uIssue.id}" class="ui-underline"/>
+	    				</p:commandLink>					
+					</p:column>
+					
+					<p:column id="title" headerText="#{msgs['issue.title']}" sortBy="#{uIssue.title}" 
+						style="	width:250px; word-wrap:break-word;" styleClass="td-left" 
+						filterBy="#{uIssue.title}" filterMatchMode="contains" >
+						<h:outputText value="#{uIssue.title}" />
+					</p:column>
+					
+					<p:column headerText="#{msgs['issue.status']}"
+						style="width:35px;" sortBy="#{uIssue.getIssueStatus().description}" >
+						<h:outputText value="#{uIssue.getIssueStatus().description}"/>
+						<p><h:outputText value="(#{uIssue.getAssignto().username})"/></p>
+					</p:column>
+					
+					<p:column headerText="#{msgs['issue.reporter']}"
+						style="width:50px;" sortBy="#{uIssue.reporter.username}" >
+						<h:outputText value="#{uIssue.reporter.username}"/>
+						<p>
+							<h:outputText value="#{uIssue.create_dt}">
+							<f:convertDateTime pattern="yyyy.MM.dd HH:MM:SS"/> 
+							</h:outputText>
+						</p>
+	
+					</p:column>
+					
+					<p:column sortBy="#{uIssue.project.name}" headerText="#{msgs['issue.project']}" 
+								style="width:100px;"  styleClass="td-left">
+			            <f:facet name="filter">
+			                <p:selectOneMenu onchange="PF('uIssueTable').filter()" >
+			                    <f:selectItem itemLabel="#{msgs['issue.all_project']}" itemValue="#{null}" noSelectionOption="true" />
+			                     <f:selectItems value="#{selectProjectBean.findAllProjects()}"  var="Project"
+			                    itemLabel="#{Project.name}" itemValue="#{Project.id}"/>
+			                </p:selectOneMenu>
+			            </f:facet>
+			            <h:outputText value="#{uIssue.project.name}" />
+			        </p:column>
+					
+					<p:column exportable="false"
+						style="width:35px;">
+						<f:facet name="header">
+							<h:outputText value="#{msgs['columns_actions']}" />
+						</f:facet>
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.editAction()}" id="editButton">
+							<f:param name="id" value="#{uIssue.id}" />
+							<h:graphicImage value="/img/edit-icon-new.png"
+								title="#{msgs['button.edit']}" alt="#{msgs['button.edit']}"
+								width="20" height="20" />
+						</p:commandLink>
+						
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.viewAction()}" id="viewButton">
+							<f:param name="id" value="#{uIssue.id}"/>
+							<h:graphicImage value="/img/preview-ico-new.png"
+								title="#{msgs['button.preview']}" alt="#{msgs['button.preview']}"
+								width="20" height="20" />
+						</p:commandLink>	
+						
+						<p:commandLink ajax="false" process="@this" immediate="true"
+							action="#{getIssuesBean.deleteAction()}" id="deleteButton">
+							<f:param name="id" value="#{uIssue.id}"/>
+							<h:graphicImage value="/img/delete.png"
+								title="#{msgs['button.delete']}" alt="#{msgs['button.delete']}"
+								width="20" height="20" />
+						</p:commandLink>				
+					</p:column>
+				</p:dataTable>	
+				
+				<h:commandLink id="excel">
+					<h:graphicImage value="/img/excel.png" />
+					<p:dataExporter type="xls" target="listuIssuesUnassigned" fileName="uIssues" />
+				</h:commandLink>
+	
+				<h:commandLink id="pdf">
+					<p:graphicImage value="/img/pdf.png" />
+					<p:dataExporter type="pdf" target="listuIssuesUnassigned" fileName="uIssues" />
+				</h:commandLink>
+				
+			</h:panelGroup>
+		</p:fieldset>
+	</h:form>
+	
+</body> 
+</html>
